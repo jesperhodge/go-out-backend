@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id              Int       @default(autoincrement()) @id
+  clerk_uuid      String    @unique
+  created_at      DateTime  @default(now())
+  updated_at      DateTime? @updatedAt
+  email           String    @unique
+  name            String?
+  gathers         Gather[]  @relation("Gather_participantsToUsers")
+  created_gathers Gather[]  @relation("Gather_creatorIdToUser")
+
+  @@map("User")
+}
+
+model Gather {
+  id              Int           @default(autoincrement()) @id
+  created_at      DateTime      @default(now())
+  updated_at      DateTime?      @updatedAt
+  name            String?
+  description     String?
+  pictures        String[]
+  date            DateTime?
+  participants    User[]        @relation("Gather_participantsToUsers")
+  creator         User          @relation(fields: [creatorId], references: [id], name: "Gather_creatorIdToUser")
+  creatorId       Int
+  googlePlace     GooglePlace?   @relation(fields: [googlePlaceId], references: [place_id])
+  googlePlaceId   String?
+
+  @@map("Gather")
+  @@index([googlePlaceId])
+}
+
+model GooglePlace {
+  id                        Int       @default(autoincrement()) @id
+  created_at                DateTime  @default(now())
+  updated_at                DateTime? @updatedAt
+  place_id                  String?   @unique
+  location                  String?   @unique
+  lat                       Float?
+  lng                       Float?
+  name                      String?
+  opening_hours             Json?
+  formatted_address         String?
+  formatted_phone_number    String?
+  photos                    Json?
+  rating                    Float?
+  reviews                   Json?
+  types                     Json?
+  url                       String?
+  user_ratings_total        Int?
+  website                   String?
+  gathers                   Gather[]
+
+  @@index(fields: [location, place_id])
+}
